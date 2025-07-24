@@ -1,26 +1,83 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+@theme {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  
+  /* 深色模式為預設 */
+  --color-bg-primary: #111827;
+  --color-bg-secondary: #1f2937;
+  --color-bg-tertiary: #374151;
+  --color-text-primary: #f9fafb;
+  --color-text-secondary: #d1d5db;
+  --color-text-muted: #9ca3af;
+  --color-border-app: #4b5563;
+  --color-background: #111827;
+  --color-foreground: #f9fafb;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* 深色模式為預設 */
+:root {
+  --bg-primary: #111827;
+  --bg-secondary: #1f2937;
+  --bg-tertiary: #374151;
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+  --text-muted: #9ca3af;
+  --border-color: #4b5563;
+  --background: #111827;
+  --foreground: #f9fafb;
+}
+
+/* 淺色模式 */
+.light-mode {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --bg-tertiary: #f3f4f6;
+  --text-primary: #111827;
+  --text-secondary: #374151;
+  --text-muted: #6b7280;
+  --border-color: #d1d5db;
+  --background: #ffffff;
+  --foreground: #111827;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition: all 0.3s ease;
+}
+
+html {
+  background: var(--background);
+  transition: all 0.3s ease;
+}
+
+/* 自定義類別 */
+.bg-app-primary { 
+  background-color: var(--bg-primary); 
+}
+.bg-app-secondary { 
+  background-color: var(--bg-secondary); 
+}
+.bg-app-tertiary { 
+  background-color: var(--bg-tertiary); 
+}
+.text-app-primary { 
+  color: var(--text-primary); 
+}
+.text-app-secondary { 
+  color: var(--text-secondary); 
+}
+.text-app-muted { 
+  color: var(--text-muted); 
+}
+.border-app { 
+  border-color: var(--border-color); 
+}
+
+/* 確保半透明背景正常工作 */
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.6);
 }
