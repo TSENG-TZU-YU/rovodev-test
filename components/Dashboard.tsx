@@ -10,9 +10,10 @@ export default function Dashboard() {
 
   const recentOrders = [
     { id: '#001', customer: '張小明', amount: 'NT$299', status: '已完成', time: '10:30' },
-    { id: '#002', customer: '李小華', amount: 'NT$599', status: '處理中', time: '11:15' },
+    { id: '#002', customer: '李小華', amount: 'NT$599', status: '備貨中', time: '11:15' },
     { id: '#003', customer: '王小美', amount: 'NT$199', status: '待付款', time: '12:00' },
-    { id: '#004', customer: '陳小強', amount: 'NT$899', status: '已完成', time: '13:45' },
+    { id: '#004', customer: '陳小強', amount: 'NT$899', status: '已出貨', time: '13:45' },
+    { id: '#005', customer: '林小雅', amount: 'NT$1,299', status: '配送中', time: '14:20' },
   ];
 
   return (
@@ -57,8 +58,16 @@ export default function Dashboard() {
                 </div>
                 <span className={`px-2 py-1 text-xs rounded-full ${
                   order.status === '已完成' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
-                  order.status === '處理中' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' :
-                  'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                  order.status === '備貨中' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' :
+                  order.status === '已出貨' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300' :
+                  order.status === '配送中' ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300' :
+                  order.status === '已送達' ? 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-300' :
+                  order.status === '已付款' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
+                  order.status === '待付款' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' :
+                  order.status === '已取消' ? 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300' :
+                  order.status === '退款中' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300' :
+                  order.status === '已退款' ? 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-300' :
+                  'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
                 }`}>
                   {order.status}
                 </span>
