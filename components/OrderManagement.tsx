@@ -35,82 +35,82 @@ const STATUS_FLOW: Record<OrderStatus, OrderStatus[]> = {
 
 export default function OrderManagement() {
   const [orders, setOrders] = useState([
-    { 
-      id: '#ORD001', 
-      customer: '張小明', 
+    {
+      id: '#ORD001',
+      customer: '張小明',
       email: 'zhang@example.com',
-      total: 1299, 
-      status: '已完成' as OrderStatus, 
+      total: 1299,
+      status: '已完成' as OrderStatus,
       date: '2024-01-15',
       items: 2,
       payment: '信用卡'
     },
-    { 
-      id: '#ORD002', 
-      customer: '李小華', 
+    {
+      id: '#ORD002',
+      customer: '李小華',
       email: 'li@example.com',
-      total: 2599, 
-      status: '備貨中' as OrderStatus, 
+      total: 2599,
+      status: '備貨中' as OrderStatus,
       date: '2024-01-15',
       items: 1,
       payment: 'PayPal'
     },
-    { 
-      id: '#ORD003', 
-      customer: '王小美', 
+    {
+      id: '#ORD003',
+      customer: '王小美',
       email: 'wang@example.com',
-      total: 899, 
-      status: '待付款' as OrderStatus, 
+      total: 899,
+      status: '待付款' as OrderStatus,
       date: '2024-01-14',
       items: 3,
       payment: '銀行轉帳'
     },
-    { 
-      id: '#ORD004', 
-      customer: '陳小強', 
+    {
+      id: '#ORD004',
+      customer: '陳小強',
       email: 'chen@example.com',
-      total: 3599, 
-      status: '已出貨' as OrderStatus, 
+      total: 3599,
+      status: '已出貨' as OrderStatus,
       date: '2024-01-14',
       items: 1,
       payment: '信用卡'
     },
-    { 
-      id: '#ORD005', 
-      customer: '林小雅', 
+    {
+      id: '#ORD005',
+      customer: '林小雅',
       email: 'lin@example.com',
-      total: 599, 
-      status: '已取消' as OrderStatus, 
+      total: 599,
+      status: '已取消' as OrderStatus,
       date: '2024-01-13',
       items: 2,
       payment: '信用卡'
     },
-    { 
-      id: '#ORD006', 
-      customer: '黃小明', 
+    {
+      id: '#ORD006',
+      customer: '黃小明',
       email: 'huang@example.com',
-      total: 1899, 
-      status: '配送中' as OrderStatus, 
+      total: 1899,
+      status: '配送中' as OrderStatus,
       date: '2024-01-16',
       items: 1,
       payment: '信用卡'
     },
-    { 
-      id: '#ORD007', 
-      customer: '吳小芳', 
+    {
+      id: '#ORD007',
+      customer: '吳小芳',
       email: 'wu@example.com',
-      total: 799, 
-      status: '已送達' as OrderStatus, 
+      total: 799,
+      status: '已送達' as OrderStatus,
       date: '2024-01-16',
       items: 2,
       payment: 'PayPal'
     },
-    { 
-      id: '#ORD008', 
-      customer: '劉小強', 
+    {
+      id: '#ORD008',
+      customer: '劉小強',
       email: 'liu@example.com',
-      total: 2299, 
-      status: '已付款' as OrderStatus, 
+      total: 2299,
+      status: '已付款' as OrderStatus,
       date: '2024-01-17',
       items: 3,
       payment: '信用卡'
@@ -124,7 +124,10 @@ export default function OrderManagement() {
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<OrderStatus | ''>('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [pendingStatusChange, setPendingStatusChange] = useState<{orderId: string, newStatus: OrderStatus} | null>(null);
+  const [dateFilter, setDateFilter] = useState('');
+  const [pendingStatusChange, setPendingStatusChange] = useState<{ orderId: string, newStatus: OrderStatus } | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [detailOrder, setDetailOrder] = useState<typeof orders[0] | null>(null);
 
   const getStatusColor = (status: OrderStatus) => {
     const statusConfig = ORDER_STATUSES.find(s => s.value === status);
@@ -133,8 +136,8 @@ export default function OrderManagement() {
 
   // 更新訂單狀態
   const updateOrderStatus = (orderId: string, newStatus: OrderStatus) => {
-    setOrders(prevOrders => 
-      prevOrders.map(order => 
+    setOrders(prevOrders =>
+      prevOrders.map(order =>
         order.id === orderId ? { ...order, status: newStatus } : order
       )
     );
@@ -168,7 +171,7 @@ export default function OrderManagement() {
       acc[status.value] = orders.filter(order => order.status === status.value).length;
       return acc;
     }, {} as Record<OrderStatus, number>);
-    
+
     return {
       total: orders.length,
       pending: stats['待付款'] + stats['已付款'],
@@ -183,14 +186,16 @@ export default function OrderManagement() {
 
   // 篩選和搜尋邏輯
   const filteredOrders = orders.filter(order => {
-    const matchesSearch = searchTerm === '' || 
+    const matchesSearch = searchTerm === '' ||
       order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.email.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesStatus = statusFilter === '' || order.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
+
+    const matchesDate = dateFilter === '' || order.date === dateFilter;
+
+    return matchesSearch && matchesStatus && matchesDate;
   });
 
   // 分頁邏輯
@@ -232,11 +237,33 @@ export default function OrderManagement() {
     }
   };
 
+  // 匯出 CSV 工具
+  const exportOrdersToCSV = (ordersToExport: typeof orders) => {
+    const header = ['訂單編號', '客戶', 'Email', '金額', '狀態', '日期', '商品數', '付款方式'];
+    const rows = ordersToExport.map(order => [
+      order.id, order.customer, order.email, order.total, order.status, order.date, order.items, order.payment
+    ]);
+    const csvContent = [header, ...rows]
+      .map(row => row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(','))
+      .join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'orders.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="p-6 bg-app-primary min-h-screen transition-all duration-300">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-app-primary transition-all duration-300">訂單管理</h2>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+        <button
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+          onClick={() => exportOrdersToCSV(filteredOrders)}
+        >
           匯出訂單
         </button>
       </div>
@@ -295,12 +322,12 @@ export default function OrderManagement() {
             placeholder="搜尋訂單編號或客戶..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-black dark:bg-gray-700 dark:text-white"
           />
-          <select 
-            value={statusFilter} 
+          <select
+            value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as OrderStatus | '')}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-black dark:bg-gray-700 dark:text-white"
           >
             <option value="">所有狀態</option>
             {ORDER_STATUSES.map(status => (
@@ -309,12 +336,15 @@ export default function OrderManagement() {
           </select>
           <input
             type="date"
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-black dark:bg-gray-700 dark:text-white"
           />
-          <button 
+          <button
             onClick={() => {
               setSearchTerm('');
               setStatusFilter('');
+              setDateFilter('');
               setCurrentPage(1);
             }}
             className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
@@ -322,7 +352,7 @@ export default function OrderManagement() {
             清除篩選
           </button>
         </div>
-        
+
         {/* 批量操作 */}
         {selectedOrders.length > 0 && (
           <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
@@ -330,10 +360,13 @@ export default function OrderManagement() {
               已選擇 {selectedOrders.length} 個訂單
             </span>
             <div className="flex space-x-2">
-              <button className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors">
+              <button
+                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors"
+                onClick={() => exportOrdersToCSV(orders.filter(order => selectedOrders.includes(order.id)))}
+              >
                 批量匯出
               </button>
-              <button 
+              <button
                 onClick={() => setSelectedOrders([])}
                 className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded transition-colors"
               >
@@ -404,10 +437,15 @@ export default function OrderManagement() {
                     {order.date}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-3">
+                    <button className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-3"
+                      onClick={() => {
+                        setDetailOrder(order);
+                        setShowDetailModal(true);
+                      }}
+                    >
                       查看
                     </button>
-                    <button 
+                    <button
                       onClick={() => {
                         setSelectedOrder(order.id);
                         setShowStatusModal(true);
@@ -436,41 +474,38 @@ export default function OrderManagement() {
           )}
         </div>
         <div className="flex space-x-2">
-          <button 
+          <button
             onClick={handlePrevPage}
             disabled={currentPage === 1}
-            className={`px-3 py-1 border rounded text-sm transition-colors ${
-              currentPage === 1 
-                ? 'border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-500 cursor-not-allowed' 
-                : 'border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
-            }`}
+            className={`px-3 py-1 border rounded text-sm transition-colors ${currentPage === 1
+              ? 'border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+              : 'border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+              }`}
           >
             上一頁
           </button>
-          
+
           {/* 頁碼按鈕 */}
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
             <button
               key={page}
               onClick={() => handlePageChange(page)}
-              className={`px-3 py-1 rounded text-sm transition-colors ${
-                currentPage === page
-                  ? 'bg-blue-600 text-white'
-                  : 'border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
-              }`}
+              className={`px-3 py-1 rounded text-sm transition-colors ${currentPage === page
+                ? 'bg-blue-600 text-white'
+                : 'border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+                }`}
             >
               {page}
             </button>
           ))}
-          
-          <button 
+
+          <button
             onClick={handleNextPage}
             disabled={currentPage === totalPages}
-            className={`px-3 py-1 border rounded text-sm transition-colors ${
-              currentPage === totalPages 
-                ? 'border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-500 cursor-not-allowed' 
-                : 'border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
-            }`}
+            className={`px-3 py-1 border rounded text-sm transition-colors ${currentPage === totalPages
+              ? 'border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+              : 'border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+              }`}
           >
             下一頁
           </button>
@@ -487,13 +522,13 @@ export default function OrderManagement() {
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               訂單編號: {selectedOrder}
             </p>
-            
+
             {(() => {
               const order = orders.find(o => o.id === selectedOrder);
               if (!order) return null;
-              
+
               const availableStatuses = getAvailableStatuses(order.status);
-              
+
               return (
                 <div className="space-y-4">
                   <div>
@@ -510,7 +545,7 @@ export default function OrderManagement() {
                       </p>
                     )}
                   </div>
-                  
+
                   {availableStatuses.length > 0 ? (
                     <div>
                       <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -541,7 +576,7 @@ export default function OrderManagement() {
                       此訂單狀態無法再更新
                     </p>
                   )}
-                  
+
                   <div className="flex justify-end space-x-3 mt-6">
                     <button
                       onClick={cancelStatusUpdate}
@@ -561,6 +596,66 @@ export default function OrderManagement() {
                 </div>
               );
             })()}
+          </div>
+        </div>
+      )}
+
+      {/* 訂單詳情模態框 */}
+      {showDetailModal && detailOrder && (
+        <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50">
+          <div
+            className="rounded-lg p-6 w-96 max-w-md mx-4"
+            style={{
+              backgroundColor: '#fff', // 強制白底
+              color: '#111',           // 強制黑字
+            }}
+          >
+            <h3 className="text-lg font-semibold mb-4" style={{ color: '#111' }}>
+              訂單詳情
+            </h3>
+            <ul className="text-sm space-y-2">
+              <li>
+                <span style={{ color: '#222' }}>訂單編號：</span>
+                <span className="font-bold" style={{ color: '#111' }}>{detailOrder.id}</span>
+              </li>
+              <li>
+                <span style={{ color: '#222' }}>客戶：</span>
+                <span className="font-bold" style={{ color: '#111' }}>{detailOrder.customer}</span>
+              </li>
+              <li>
+                <span style={{ color: '#222' }}>Email：</span>
+                <span className="font-bold" style={{ color: '#111' }}>{detailOrder.email}</span>
+              </li>
+              <li>
+                <span style={{ color: '#222' }}>金額：</span>
+                <span className="font-bold" style={{ color: '#15803d' }}>NT${detailOrder.total.toLocaleString()}</span>
+              </li>
+              <li>
+                <span style={{ color: '#222' }}>狀態：</span>
+                <span className={`font-bold ${getStatusColor(detailOrder.status)}`} style={{ color: '#111' }}>{detailOrder.status}</span>
+              </li>
+              <li>
+                <span style={{ color: '#222' }}>日期：</span>
+                <span className="font-bold" style={{ color: '#111' }}>{detailOrder.date}</span>
+              </li>
+              <li>
+                <span style={{ color: '#222' }}>商品數：</span>
+                <span className="font-bold" style={{ color: '#111' }}>{detailOrder.items}</span>
+              </li>
+              <li>
+                <span style={{ color: '#222' }}>付款方式：</span>
+                <span className="font-bold" style={{ color: '#111' }}>{detailOrder.payment}</span>
+              </li>
+            </ul>
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => setShowDetailModal(false)}
+                className="px-4 py-2 transition-colors"
+                style={{ color: '#111' }}
+              >
+                關閉
+              </button>
+            </div>
           </div>
         </div>
       )}
